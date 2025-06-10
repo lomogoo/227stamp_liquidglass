@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🚚 Route227 Stamp</title>
-  <meta name="theme-color" content="#F2CC8F">
+  <title>🚚 Route 227</title>
+  <meta name="theme-color" content="#F8F6F2">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="style.css"/>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -20,9 +20,11 @@
     <div class="loading-spinner"></div>
   </div>
 
+  <div id="transition-overlay" class="transition-overlay"></div>
+
   <div id="app-root">
     <header class="app-header">
-      <div class="container header-container">
+      <div class="header-container">
         <div class="logo">
           <img src="assets/truck.png" alt="Route 227 トラックロゴ" class="logo-icon">
           <span class="logo-text">Route 227</span>
@@ -33,124 +35,106 @@
 
     <main class="app-content">
       <section id="feed-section" class="section">
-    <div class="container">
-      <div class="category-tabs" id="category-tabs">
-        <button class="category-tab active" data-category="all">すべて</button>
-        <button class="category-tab" data-category="イベント">イベント</button>
-        <button class="category-tab" data-category="特集">特集</button>
-        <button class="category-tab" data-category="お店">お店</button>
-        <button class="category-tab" data-category="ニュース・コラム">ニュース・コラム</button>
-      </div>
-      <div class="articles-container" id="articles-container"></div>
-      <div id="load-more-container" class="load-more-container">
-        <button id="load-more-btn" class="btn btn-secondary">さらに読み込む</button>
-      </div>
-    </div>
-  </section>
-
-       <section id="foodtruck-section" class="section">
-    <div class="container">
-      <div class="card stamp-card-container">
-        <div class="card-header">
-          <h2>スタンプカード</h2>
-          <p>旅の思い出を集めよう</p>
-        </div>
-        <div class="card-body">
-          <div class="stamp-grid">
-            <div class="stamp" data-stamp-id="1"><span class="stamp-number">1</span></div>
-            <div class="stamp" data-stamp-id="2"><span class="stamp-number">2</span></div>
-            <div class="stamp" data-stamp-id="3"><span class="stamp-number">3</span></div>
-            <div class="stamp" data-stamp-id="4"><span class="stamp-number">4</span></div>
-            <div class="stamp" data-stamp-id="5"><span class="stamp-number">5</span></div>
-            <div class="stamp" data-stamp-id="6"><span class="stamp-number">6</span></div>
+        <div class="container">
+          <h1 class="section-title">フィード</h1>
+          <div class="category-tabs" id="category-tabs">
+            <button class="category-tab active" data-category="all">すべて</button>
+            <button class="category-tab" data-category="イベント">イベント</button>
+            <button class="category-tab" data-category="特集">特集</button>
+            <button class="category-tab" data-category="お店">お店</button>
+            <button class="category-tab" data-category="ニュース・コラム">ニュース・コラム</button>
+          </div>
+          <div class="articles-container" id="articles-container"></div>
+          <div id="load-more-container" class="load-more-container">
+            <button id="load-more-btn" class="btn btn-secondary">さらに読み込む</button>
           </div>
         </div>
-        <div class="card-footer">
-          <button class="btn btn-primary btn-full" id="scan-qr">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/></svg>
-            <span>QRコードをスキャン</span>
-          </button>
-        </div>
-      </div>
+      </section>
 
-      <div class="card rewards-card-container">
-        <div class="card-header">
-          <h2>特典と交換</h2>
-        </div>
-        <div class="card-body">
-          <div class="reward-item" id="coffee-reward-item">
-            <div class="reward-icon">☕️</div>
-            <div class="reward-info">
-              <h3>コーヒー1杯</h3>
-              <p>3スタンプで交換</p>
+      <section id="foodtruck-section" class="section">
+        <div class="container">
+          <h1 class="section-title">スタンプカード</h1>
+          
+          <div class="card stamp-dashboard">
+            <div class="stamp-card-container">
+              <div class="stamp-grid">
+                <div class="stamp" data-stamp-id="1"><span class="stamp-number">1</span></div>
+                <div class="stamp" data-stamp-id="2"><span class="stamp-number">2</span></div>
+                <div class="stamp" data-stamp-id="3"><span class="stamp-number">3</span></div>
+                <div class="stamp" data-stamp-id="4"><span class="stamp-number">4</span></div>
+                <div class="stamp" data-stamp-id="5"><span class="stamp-number">5</span></div>
+                <div class="stamp" data-stamp-id="6"><span class="stamp-number">6</span></div>
+              </div>
+              <button class="btn btn-primary btn-full" id="scan-qr">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+                <span>QRをスキャン</span>
+              </button>
             </div>
-            <button class="btn btn-secondary" id="coffee-reward" disabled>交換</button>
-          </div>
-          <div class="reward-item" id="curry-reward-item">
-            <div class="reward-icon">🍛</div>
-            <div class="reward-info">
-              <h3>カレー1杯</h3>
-              <p>6スタンプで交換</p>
+
+            <div class="rewards-container">
+              <h3 class="rewards-title">特典</h3>
+              <div class="reward-item" id="coffee-reward-item">
+                <div class="reward-info">
+                  <h4>コーヒー1杯</h4>
+                  <p>3スタンプで交換</p>
+                </div>
+                <button class="btn btn-secondary" id="coffee-reward" disabled>交換</button>
+              </div>
+              <div class="reward-item" id="curry-reward-item">
+                <div class="reward-info">
+                  <h4>カレー1杯</h4>
+                  <p>6スタンプで交換</p>
+                </div>
+                <button class="btn btn-secondary" id="curry-reward" disabled>交換</button>
+              </div>
             </div>
-            <button class="btn btn-secondary" id="curry-reward" disabled>交換</button>
+          </div>
+
+          <div class="card schedule-card">
+              <h2 class="card-title">出店スケジュール</h2>
+              <img src="assets/schedule.png" alt="出店スケジュール" class="schedule-image">
           </div>
         </div>
-      </div>
-
-      <div class="card schedule-card-container">
-        <div class="card-header">
-          <h2>出店スケジュール</h2>
-        </div>
-        <div class="card-body">
-          <img src="assets/schedule.png" alt="出店スケジュール" class="schedule-image">
-        </div>
-      </div>
-
-    </div>
-  </section>
+      </section>
     </main>
 
     <footer class="footer-nav">
       <button class="nav-link" data-section="feed-section">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm5 2H6v3h3zm6 0h-3v3h3zm-6 5H6v3h3zm6 0h-3v3h3z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h5"/></svg>
         <span>フィード</span>
       </button>
       <button class="nav-link" data-section="foodtruck-section">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6.343a4 4 0 0 1 0 5.314"/><path d="M18 3.2a8 8 0 0 1 0 11.6"/><path d="M4 12V8c0-1.1.9-2 2-2h2.2a2.8 2.8 0 0 1 2.3 1.2L12 9l2.5-2.8A2.8 2.8 0 0 1 16.8 5H20a2 2 0 0 1 2 2v4M4 12h16v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.78l1.21 1.21a4 4 0 0 1-4.78 4.78z"/><path d="M11.72 20.45a4 4 0 0 1-4.78-4.78l1.21 1.21a4 4 0 0 1 4.78 4.78z"/><path d="M8.62 15.15a4 4 0 0 1 4.78-4.78l1.21 1.21a4 4 0 0 1-4.78 4.78z"/><path d="m14 7 3 3"/><path d="M18.88 12.55a4 4 0 0 1 0 5.66l-1.06 1.06a4 4 0 0 1-5.66 0z"/></svg>
         <span>スタンプ</span>
       </button>
     </footer>
+  </div>
 
+  <div class="modal-backdrop" id="qr-modal-backdrop">
     <div class="modal" id="qr-modal">
-      <div class="modal-content">
         <div class="modal-header"><h3>QRコードをスキャン</h3><button class="close-modal">&times;</button></div>
         <div class="modal-body"><div id="qr-reader"></div></div>
-      </div>
     </div>
-    <div class="modal" id="notification-modal">
-      <div class="modal-content">
-        <div class="modal-header"><h3 id="notification-title"></h3><button class="close-modal">&times;</button></div>
-        <div class="modal-body"><p id="notification-message"></p><button class="btn btn-primary close-notification">OK</button></div>
+  </div>
+  <div class="modal-backdrop" id="notification-modal-backdrop">
+      <div class="modal" id="notification-modal">
+        <div class="modal-header"><h3 id="notification-title"></h3></div>
+        <div class="modal-body"><p id="notification-message"></p><button class="btn btn-primary close-notification">閉じる</button></div>
       </div>
-    </div>
-    <div class="modal" id="login-modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 id="login-title">ログイン</h3>
-          <button class="close-modal">&times;</button>
-        </div>
+  </div>
+  <div class="modal-backdrop" id="login-modal-backdrop">
+      <div class="modal" id="login-modal">
+        <div class="modal-header"><h3 id="login-title">ログイン</h3><button class="close-modal">&times;</button></div>
         <div class="modal-body">
-          <form id="email-form" class="modal-body">
+          <form id="email-form">
             <p>スタンプ機能の利用にはログインが必要です。</p>
             <input type="email" id="email" placeholder="メールアドレス" required />
-            <p style="font-size: 12px; color: #6c757d; margin-top: -8px; margin-bottom: 16px;">
-              ※メールが届かない場合は、迷惑メールフォルダもご確認ください。
-            </p>
+            <p class="form-note">※メールが届かない場合は、迷惑メールフォルダもご確認ください。</p>
             <button type="submit" class="btn btn-primary btn-full">認証コードを送信</button>
             <p id="email-message" class="form-message"></p>
           </form>
           <form id="otp-form" class="hidden">
-            <p><strong id="otp-email-display"></strong> 宛に送信された6桁のコードを入力してください。</p>
+            <p><strong id="otp-email-display"></strong> 宛に送信されたコードを入力してください。</p>
             <input type="text" id="otp-code" placeholder="6桁のコード" required inputmode="numeric" pattern="\d{6}" />
             <button type="submit" class="btn btn-primary btn-full">認証する</button>
             <p id="otp-message" class="form-message"></p>
@@ -158,9 +142,9 @@
           </form>
         </div>
       </div>
-    </div>
-    <div class="modal" id="summary-modal">
-      <div class="modal-content summary-modal-content">
+  </div>
+  <div class="modal-backdrop" id="summary-modal-backdrop">
+      <div class="modal" id="summary-modal">
         <button class="close-modal summary-close-btn">&times;</button>
         <div id="summary-image" class="summary-image"></div>
         <div class="summary-text-content">
@@ -172,8 +156,8 @@
           </a>
         </div>
       </div>
-    </div>
   </div>
+
   <script src="app.js"></script>
 </body>
 </html>
