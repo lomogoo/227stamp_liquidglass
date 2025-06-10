@@ -9,48 +9,31 @@ const db = createClient(
 let globalUID = null;
 let html5QrCode = null;
 let articlesCache = [];
+let intersectionObserver;
 const ARTICLES_PER_PAGE = 10;
 let currentPage = 0;
 let currentCategory = 'all';
 let isLoadingMore = false;
 let isInitialAuthCheckDone = false;
-
-const appData = {
-  qrString: "ROUTE227_STAMP_2025"
-};
+const appData = { qrString: "ROUTE227_STAMP_2025" };
 
 /* 3) メイン処理 */
 document.addEventListener('DOMContentLoaded', () => {
-  setupStaticEventListeners();
+  setupEventListeners();
+  initializeIntersectionObserver();
 
   db.auth.onAuthStateChange(async (event, session) => {
-    const previousUID = globalUID;
     globalUID = session?.user?.id || null;
-    updateUserStatus(session);
+    updateUserStatusUI(session);
 
     if (!isInitialAuthCheckDone) {
       isInitialAuthCheckDone = true;
       const appLoader = document.getElementById('app-loader');
-      if (!appLoader.classList.contains('active')) {
-        appLoader.classList.add('active');
-      }
+      appLoader.classList.add('hidden');
       
-      try {
-        const lastSection = sessionStorage.getItem('activeSection') || 'feed-section';
-        await showSection(lastSection, true);
-      } catch (error) {
-        console.error("[INIT] Critical error during initial load:", error);
-        await showSection('feed-section', true);
-      } finally {
-        appLoader.classList.remove('active');
-      }
-    }
-    else {
-      if (event === 'SIGNED_IN' && !previousUID && globalUID) {
-        const currentActiveSectionId = document.querySelector('.section.active')?.id || 'foodtruck-section';
-        await showSection(currentActiveSectionId, false);
-      }
-
+      const lastSection = sessionStorage.getItem('activeSection') || 'feed-section';
+      await showSection(lastSection, true);
+    } else {
       if (event === 'SIGNED_OUT') {
         sessionStorage.removeItem('activeSection');
         window.location.reload();
@@ -59,11 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-/* 4) ナビゲーションと表示切替 */
-function setupStaticEventListeners() {
+/* 4) UIインタラクションと表示切替 */
+function setupEventListeners() {
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
       const sectionId = e.currentTarget.dataset.section;
+      if (document.querySelector(`.section.active`)?.id === sectionId) return;
       sessionStorage.setItem('activeSection', sectionId);
       showSection(sectionId);
     });
@@ -76,94 +60,72 @@ function setupStaticEventListeners() {
   });
 
   const emailForm = document.getElementById('email-form');
+  emailForm?.addEventListener('submit', handleEmailLogin);
+
   const otpForm = document.getElementById('otp-form');
-  const emailInput = document.getElementById('email');
-  const otpCodeInput = document.getElementById('otp-code');
-  const emailMessage = document.getElementById('email-message');
-  const otpMessage = document.getElementById('otp-message');
-  const otpEmailDisplay = document.getElementById('otp-email-display');
-  const changeEmailBtn = document.getElementById('change-email-btn');
-
-  emailForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = emailInput.value.trim();
-    const submitButton = emailForm.querySelector('button[type="submit"]');
-    submitButton.disabled = true; submitButton.textContent = '送信中...'; emailMessage.textContent = '';
-    try {
-      const { error } = await db.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true }});
-      if (error) throw error;
-      emailMessage.textContent = '✅ メールを確認してください！';
-      otpEmailDisplay.textContent = email;
-      emailForm.classList.add('hidden');
-      otpForm.classList.remove('hidden');
-    } catch (err) {
-      emailMessage.textContent = `❌ ${err.message || 'エラーが発生しました。'}`;
-    } finally {
-      submitButton.disabled = false; submitButton.textContent = '認証コードを送信';
-    }
-  });
-
-  otpForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = otpEmailDisplay.textContent;
-    const token = otpCodeInput.value.trim();
-    const submitButton = otpForm.querySelector('button[type="submit"]');
-    submitButton.disabled = true; submitButton.textContent = '認証中...'; otpMessage.textContent = '';
-    try {
-      const { data, error } = await db.auth.verifyOtp({ email: email, token: token, type: 'email' });
-      if (error) throw error;
-      closeModal(document.getElementById('login-modal'));
-    } catch (err) {
-      otpMessage.textContent = `❌ ${err.message || '認証に失敗しました。'}`;
-    } finally {
-      submitButton.disabled = false; submitButton.textContent = '認証する';
-    }
-  });
+  otpForm?.addEventListener('submit', handleOtpVerify);
   
-  changeEmailBtn?.addEventListener('click', () => {
-    otpForm.classList.add('hidden');
-    emailForm.classList.remove('hidden');
-    emailMessage.textContent = '';
-    otpMessage.textContent = '';
+  document.getElementById('change-email-btn')?.addEventListener('click', () => {
+    document.getElementById('otp-form').classList.add('hidden');
+    document.getElementById('email-form').classList.remove('hidden');
+    document.getElementById('email-message').textContent = '';
+    document.getElementById('otp-message').textContent = '';
   });
 
   document.body.addEventListener('click', (e) => {
-    if (e.target.matches('.close-modal') || e.target.matches('.close-notification')) {
-      const modal = e.target.closest('.modal');
-      if (modal) closeModal(modal);
-    }
-    if (e.target.matches('.modal')) {
-      closeModal(e.target);
+    if (e.target.matches('.close-modal') || e.target.matches('.modal-backdrop') || e.target.matches('.close-notification')) {
+      const backdrop = e.target.closest('.modal-backdrop');
+      if (backdrop) closeModal(backdrop.id.replace('-backdrop', ''));
     }
   });
 }
 
 async function showSection(sectionId, isInitialLoad = false) {
-  const appLoader = document.getElementById('app-loader');
-  if (!isInitialLoad) appLoader.classList.add('active');
-
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(l => {
-    l.classList.toggle('active', l.dataset.section === sectionId);
-  });
-
-  const sectionElement = document.getElementById(sectionId);
-  if (sectionElement) {
-    sectionElement.classList.add('active');
-    if (sectionId === 'feed-section') await initializeFeedPage();
-    else if (sectionId === 'foodtruck-section') initializeFoodtruckPage(); // ここはawaitしない
-  }
+  const transitionOverlay = document.getElementById('transition-overlay');
   
-  if (!isInitialLoad) {
-      setTimeout(() => appLoader.classList.remove('active'), 100);
+  const transitionAction = async () => {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.section === sectionId));
+    
+    const sectionElement = document.getElementById(sectionId);
+    if (sectionElement) {
+      sectionElement.classList.add('active');
+      if (sectionId === 'feed-section') await initializeFeedPage();
+      else if (sectionId === 'foodtruck-section') await initializeFoodtruckPage();
+    }
+  };
+
+  if (isInitialLoad) {
+    await transitionAction();
+  } else {
+    transitionOverlay.classList.add('animate');
+    await new Promise(resolve => setTimeout(resolve, 400));
+    await transitionAction();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    transitionOverlay.classList.remove('animate');
   }
 }
 
-function updateUserStatus(session) {
+function updateUserStatusUI(session) {
     const userStatusDiv = document.getElementById('user-status');
     if (userStatusDiv) {
-        userStatusDiv.innerHTML = session ? '<button id="logout-button" class="btn">ログアウト</button>' : '';
-        if (session) document.getElementById('logout-button').addEventListener('click', () => db.auth.signOut());
+        userStatusDiv.innerHTML = session ? '<button id="logout-button" class="btn btn-secondary">ログアウト</button>' : '<button id="login-button" class="btn btn-primary">ログイン</button>';
+        if (session) {
+            document.getElementById('logout-button').addEventListener('click', () => db.auth.signOut());
+        } else {
+            document.getElementById('login-button').addEventListener('click', () => openModal('login-modal'));
+        }
+    }
+}
+
+function openModal(modalId) {
+    document.getElementById(`${modalId}-backdrop`)?.classList.add('active');
+}
+function closeModal(modalId) {
+    const backdrop = document.getElementById(`${modalId}-backdrop`);
+    backdrop?.classList.remove('active');
+    if (modalId === 'qr-modal' && html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(console.error);
     }
 }
 
@@ -182,269 +144,220 @@ async function initializeFeedPage() {
       }
     });
   }
-  
-  currentPage = 0;
-  currentCategory = 'all';
-  document.querySelectorAll('.category-tab').forEach(t => t.classList.toggle('active', t.dataset.category === 'all'));
-  
-  // renderArticlesを直接awaitせず、分離して呼び出す
-  renderArticles(currentCategory, true);
+  await renderArticles('all', true);
 }
 
-function initializeFoodtruckPage() {
+async function initializeFoodtruckPage() {
   if (!globalUID) {
-    document.getElementById('login-modal').classList.add('active');
     updateStampDisplay(0);
     updateRewardButtons(0);
     return;
   }
   
-  updateStampDisplay(0);
-  updateRewardButtons(0);
-  setupFoodtruckActionListeners();
-
-  (async () => {
-    try {
-      const stampCount = await fetchUserRow(globalUID);
-      updateStampDisplay(stampCount);
-      updateRewardButtons(stampCount);
-    } catch (error) {
-      console.error("Failed to fetch stamp count in background:", error);
-    }
-  })();
-}
-
-/* 6) ヘルパー関数群 */
-function setupFoodtruckActionListeners() {
-    const foodtruckSection = document.getElementById('foodtruck-section');
-    if (!foodtruckSection || foodtruckSection.dataset.listenersAttached === 'true') {
-        return;
-    }
-    foodtruckSection.dataset.listenersAttached = 'true';
-
-    document.getElementById('scan-qr')?.addEventListener('click', initQRScanner);
-    document.getElementById('coffee-reward')?.addEventListener('click', () => redeemReward('coffee'));
-    document.getElementById('curry-reward')?.addEventListener('click', () => redeemReward('curry'));
-}
-
-function closeModal(modalElement) {
-    if(!modalElement) return;
-    modalElement.classList.remove('active');
-    if (modalElement.id === 'qr-modal' && html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(console.error);
-    }
-}
-
-async function fetchUserRow(uid) {
+  document.getElementById('scan-qr')?.addEventListener('click', initQRScanner);
+  document.getElementById('coffee-reward')?.addEventListener('click', () => redeemReward('coffee'));
+  document.getElementById('curry-reward')?.addEventListener('click', () => redeemReward('curry'));
+  
   try {
-    const { data, error } = await db
-      .from('users')
-      .select('stamp_count')
-      .eq('supabase_uid', uid)
-      .maybeSingle(); 
-
-    if (error) throw error;
-    return data?.stamp_count || 0;
-  } catch (err) {
-    showNotification('データベースエラー', 'ユーザー情報の取得に失敗しました。');
-    throw err;
+    const stampCount = await fetchStampCount(globalUID);
+    updateStampDisplay(stampCount);
+    updateRewardButtons(stampCount);
+  } catch (error) {
+    console.error("Failed to fetch stamp count:", error);
   }
 }
 
-async function updateStampCount(uid, newCount) {
-  try {
-    const { data, error } = await db.from('users').update({ stamp_count: newCount, updated_at: new Date().toISOString() }).eq('supabase_uid', uid).select().single();
-    if (error) throw error;
-    return data.stamp_count;
-  } catch(err) {
-    showNotification('エラー', 'スタンプの保存に失敗しました。');
-    throw err;
-  }
+/* 6) ヘルパー関数群 (UI/UX) */
+function initializeIntersectionObserver() {
+    intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationDelay = `${(entry.target.dataset.index % 5) * 0.1}s`;
+                entry.target.classList.add('in-view');
+                intersectionObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+}
+
+function showNotification(title, msg) {
+  document.getElementById('notification-title').textContent = title;
+  document.getElementById('notification-message').textContent = msg;
+  openModal('notification-modal');
 }
 
 function updateStampDisplay(count) {
-  document.querySelectorAll('.stamp').forEach((el, i) => el.classList.toggle('active', i < count));
+  document.querySelectorAll('.stamp').forEach((el, i) => {
+    el.classList.toggle('stamped', i < count);
+  });
 }
 
 function updateRewardButtons(count) {
   const coffeeBtn = document.getElementById('coffee-reward');
   const curryBtn = document.getElementById('curry-reward');
-  const coffeeItem = document.getElementById('coffee-reward-item');
-  const curryItem = document.getElementById('curry-reward-item');
-
   if (coffeeBtn) coffeeBtn.disabled = count < 3;
   if (curryBtn) curryBtn.disabled = count < 6;
-  coffeeItem?.classList.toggle('available', count >= 3);
-  curryItem?.classList.toggle('available', count >= 6);
+  document.getElementById('coffee-reward-item')?.classList.toggle('available', count >= 3);
+  document.getElementById('curry-reward-item')?.classList.toggle('available', count >= 6);
 }
 
-function showNotification(title, msg) {
-  const modal = document.getElementById('notification-modal');
-  if(modal){
-    document.getElementById('notification-title').textContent = title;
-    document.getElementById('notification-message').textContent = msg;
-    modal.classList.add('active');
+/* 7) 認証とデータ処理 */
+async function handleEmailLogin(e) {
+  e.preventDefault();
+  const emailInput = document.getElementById('email');
+  const emailMessage = document.getElementById('email-message');
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  submitButton.disabled = true; submitButton.textContent = '送信中...'; emailMessage.textContent = '';
+  try {
+    const { error } = await db.auth.signInWithOtp({ email: emailInput.value.trim(), options: { shouldCreateUser: true }});
+    if (error) throw error;
+    document.getElementById('otp-email-display').textContent = emailInput.value.trim();
+    document.getElementById('email-form').classList.add('hidden');
+    document.getElementById('otp-form').classList.remove('hidden');
+  } catch (err) {
+    emailMessage.textContent = `エラー: ${err.message}`;
+  } finally {
+    submitButton.disabled = false; submitButton.textContent = '認証コードを送信';
   }
 }
 
+async function handleOtpVerify(e) {
+    e.preventDefault();
+    const otpMessage = document.getElementById('otp-message');
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    submitButton.disabled = true; submitButton.textContent = '認証中...'; otpMessage.textContent = '';
+    try {
+        const email = document.getElementById('otp-email-display').textContent;
+        const token = document.getElementById('otp-code').value.trim();
+        const { error } = await db.auth.verifyOtp({ email, token, type: 'email' });
+        if (error) throw error;
+        closeModal('login-modal');
+        await showSection(sessionStorage.getItem('activeSection') || 'foodtruck-section');
+    } catch (err) {
+        otpMessage.textContent = `エラー: ${err.message}`;
+    } finally {
+        submitButton.disabled = false; submitButton.textContent = '認証する';
+    }
+}
+
+async function fetchStampCount(uid) {
+  const { data, error } = await db.from('users').select('stamp_count').eq('supabase_uid', uid).maybeSingle();
+  if (error) throw error;
+  return data?.stamp_count || 0;
+}
+
+async function updateStampCount(uid, newCount) {
+  const { data, error } = await db.from('users').update({ stamp_count: newCount, updated_at: new Date().toISOString() }).eq('supabase_uid', uid).select().single();
+  if (error) throw error;
+  return data.stamp_count;
+}
+
 async function addStamp() {
-  if (!globalUID) return;
+  if (!globalUID) return openModal('login-modal');
   try {
-    let count = await fetchUserRow(globalUID);
-    if (count >= 6) return showNotification('コンプリート！', 'スタンプが6個たまりました！');
+    let count = await fetchStampCount(globalUID);
+    if (count >= 6) return showNotification('コンプリート！', 'スタンプが全てたまりました！');
     count = await updateStampCount(globalUID, count + 1);
     updateStampDisplay(count);
     updateRewardButtons(count);
-    if (count === 3 || count === 6) showNotification('🎉', count === 3 ? 'コーヒー1杯無料！' : 'カレー1杯無料！');
-    else showNotification('スタンプ獲得', `現在 ${count} 個`);
+    showNotification('スタンプ獲得', `現在 ${count} 個`);
   } catch (error) {
     showNotification('エラー', 'スタンプの追加に失敗しました。');
   }
 }
 
 async function redeemReward(type) {
-  if (!globalUID) return;
-  try {
-    let count = await fetchUserRow(globalUID);
-    const required = type === 'coffee' ? 3 : 6;
-    if (count < required) return;
-    count = await updateStampCount(globalUID, count - required);
-    updateStampDisplay(count);
-    updateRewardButtons(count);
-    showNotification('交換完了', `${type === 'coffee' ? 'コーヒー' : 'カレー'}と交換しました！`);
-  } catch (error) {
-    showNotification('エラー', '特典の交換に失敗しました。');
-  }
+    if (!globalUID) return openModal('login-modal');
+    try {
+        let count = await fetchStampCount(globalUID);
+        const required = type === 'coffee' ? 3 : 6;
+        if (count < required) return;
+        count = await updateStampCount(globalUID, count - required);
+        updateStampDisplay(count);
+        updateRewardButtons(count);
+        showNotification('交換完了', `${type === 'coffee' ? 'コーヒー' : 'カレー'}と交換しました！`);
+    } catch (error) {
+        showNotification('エラー', '特典の交換に失敗しました。');
+    }
 }
 
-function initQRScanner() {
-  const qrModal = document.getElementById('qr-modal');
-  qrModal?.classList.add('active');
-  let isProcessing = false;
-  html5QrCode = new Html5Qrcode('qr-reader');
-  html5QrCode.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 250, height: 250 } },
-    async (decodedText) => {
-      if (isProcessing) return;
-      isProcessing = true;
-      if (html5QrCode.isScanning) await html5QrCode.stop();
-      closeModal(qrModal);
-      if (decodedText === appData.qrString) {
-        await addStamp();
-      } else {
-        showNotification('無効なQR', 'お店のQRコードではありません。');
-      }
-    },
-    (errorMessage) => {}
-  ).catch(() => document.getElementById('qr-reader').innerHTML = '<p style="color: red;">カメラの起動に失敗しました</p>');
-}
+/* 8) 記事とQRコード */
+async function renderArticles(category, clearContainer) {
+    const articlesContainer = document.getElementById('articles-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (!articlesContainer || !loadMoreBtn) return;
 
-// ★★★ フィード表示も抜本対策を適用 ★★★
-function renderArticles(category, clearContainer) {
-  const articlesContainer = document.getElementById('articles-container');
-  const loadMoreBtn = document.getElementById('load-more-btn');
-  if (!articlesContainer || !loadMoreBtn) return;
-
-  isLoadingMore = true;
-  if (clearContainer) {
-    articlesContainer.innerHTML = '<div class="loading-spinner"></div>';
-    articlesCache = [];
-  } else {
+    isLoadingMore = true;
+    if (clearContainer) {
+        articlesContainer.innerHTML = '<div class="loading-spinner" style="margin: 40px auto;"></div>';
+        currentPage = 0;
+        articlesCache = [];
+    }
     loadMoreBtn.textContent = '読み込み中...';
     loadMoreBtn.disabled = true;
-  }
 
-  // データ取得をバックグラウンドで実行
-  (async () => {
     try {
-      const from = currentPage * ARTICLES_PER_PAGE;
-      const to = from + ARTICLES_PER_PAGE - 1;
+        const from = currentPage * ARTICLES_PER_PAGE;
+        const { data, error } = await db.from('articles').select('*').order('created_at', { ascending: false }).eq(category === 'all' ? 'is_published' : 'category', category === 'all' ? true : category).range(from, from + ARTICLES_PER_PAGE - 1);
+        if (error) throw error;
 
-      let query = db.from('articles').select('*').order('created_at', { ascending: false }).range(from, to);
-      if (category !== 'all') {
-        query = query.eq('category', category);
-      }
-      
-      const { data: newArticles, error } = await query;
-      if (error) throw error;
+        if (clearContainer) articlesContainer.innerHTML = '';
+        
+        if (data.length === 0 && clearContainer) {
+            articlesContainer.innerHTML = '<p style="text-align:center; padding: 40px;">記事はまだありません。</p>';
+        } else {
+            data.forEach((cardData, index) => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.dataset.index = index; // for animation delay
+                const placeholderUrl = 'https://via.placeholder.com/400x250.png?text=Route227';
+                div.innerHTML = `
+                    <div class="article-link" data-article-id="${cardData.id}" role="button">
+                        <img src="${cardData.image_url || placeholderUrl}" alt="${cardData.title}" loading="lazy" onerror="this.src='${placeholderUrl}';">
+                        <div class="card-body">
+                            <h3 class="article-title">${cardData.title}</h3>
+                            <p class="article-excerpt">${cardData.summary}</p>
+                        </div>
+                    </div>`;
+                articlesContainer.appendChild(div);
+                intersectionObserver.observe(div); // Observe for fade-in
+            });
+            articlesCache.push(...data);
+        }
 
-      if (clearContainer) {
-          articlesContainer.innerHTML = ''; // スピナーを消す
-      }
-      
-      articlesCache.push(...newArticles);
-
-      if (articlesCache.length === 0 && clearContainer) {
-        articlesContainer.innerHTML = '<p style="text-align: center; padding: 20px;">記事はまだありません。</p>';
-      } else {
-        newArticles.forEach(cardData => {
-          const div = document.createElement('div');
-          div.className = 'card';
-          const placeholderUrl = 'https://via.placeholder.com/400x250.png?text=Route227';
-          const imageUrl = cardData.image_url || placeholderUrl;
-          
-          div.innerHTML = `
-            <div class="article-link" data-article-id="${cardData.id}" role="button" tabindex="0">
-              <img src="${imageUrl}" alt="${cardData.title}のサムネイル" loading="lazy" onerror="this.onerror=null;this.src='${placeholderUrl}';">
-              <div class="card-body">
-                <h3 class="article-title">${cardData.title}</h3>
-                <p class="article-excerpt">${cardData.summary}</p>
-              </div>
-            </div>`;
-          articlesContainer.appendChild(div);
-        });
-      }
-
-      if (newArticles.length < ARTICLES_PER_PAGE) {
-        loadMoreBtn.classList.remove('visible');
-      } else {
-        loadMoreBtn.classList.add('visible');
-      }
-
-      document.querySelectorAll('.article-link').forEach(link => {
-        if(link.dataset.listenerAttached) return;
-        link.dataset.listenerAttached = 'true';
-        link.addEventListener('click', (e) => {
-          const articleId = e.currentTarget.dataset.articleId;
-          showSummaryModal(parseInt(articleId, 10));
-        });
-      });
-
+        loadMoreBtn.classList.toggle('visible', data.length === ARTICLES_PER_PAGE);
     } catch (error) {
-      console.error("記事の読み込みエラー:", error);
-      articlesContainer.innerHTML = '<div class="status status--error">記事の読み込みに失敗しました。</div>';
+        articlesContainer.innerHTML = '<p style="text-align:center; padding: 40px; color: var(--color-accent-red);">記事の読み込みに失敗しました。</p>';
     } finally {
-      isLoadingMore = false;
-      loadMoreBtn.textContent = 'さらに読み込む';
-      loadMoreBtn.disabled = false;
+        isLoadingMore = false;
+        loadMoreBtn.textContent = 'さらに読み込む';
+        loadMoreBtn.disabled = false;
+        document.querySelectorAll('.article-link').forEach(link => {
+            link.addEventListener('click', (e) => showSummaryModal(parseInt(e.currentTarget.dataset.articleId, 10)));
+        });
     }
-  })();
 }
 
 function showSummaryModal(articleId) {
     const article = articlesCache.find(a => a.id === articleId);
     if (!article) return;
-    const modal = document.getElementById('summary-modal');
-    const imgEl = document.getElementById('summary-image');
-    const titleEl = document.getElementById('summary-title');
-    const bulletsEl = document.getElementById('summary-bullets');
-    const readMoreBtn = document.getElementById('summary-read-more');
-    
-    const placeholderUrl = 'https://via.placeholder.com/400x250.png?text=Route227';
-    const imageUrl = article.image_url || placeholderUrl;
-    imgEl.style.backgroundImage = `url('${imageUrl}')`;
-
-    titleEl.textContent = article.title;
-    bulletsEl.innerHTML = article.summary_points?.map(point => `<li>${point.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>`).join('') || '';
-    readMoreBtn.href = article.article_url;
-    modal.classList.add('active');
+    document.getElementById('summary-image').style.backgroundImage = `url('${article.image_url || ''}')`;
+    document.getElementById('summary-title').textContent = article.title;
+    document.getElementById('summary-bullets').innerHTML = article.summary_points?.map(p => `<li>${p}</li>`).join('') || '';
+    document.getElementById('summary-read-more').href = article.article_url;
+    openModal('summary-modal');
 }
 
-function promiseWithTimeout(promise, ms, timeoutError = new Error('Promise timed out')) {
-  const timeout = new Promise((_, reject) => {
-    const id = setTimeout(() => {
-      clearTimeout(id);
-      reject(timeoutError);
-    }, ms);
-  });
-  return Promise.race([promise, timeout]);
+function initQRScanner() {
+  openModal('qr-modal');
+  html5QrCode = new Html5Qrcode('qr-reader');
+  html5QrCode.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 250, height: 250 } },
+    async (decodedText) => {
+      if (html5QrCode.isScanning) await html5QrCode.stop();
+      closeModal('qr-modal');
+      if (decodedText === appData.qrString) await addStamp();
+      else showNotification('無効なQR', 'お店のQRコードではありません。');
+    },
+    (errorMessage) => {}
+  ).catch(() => showNotification('エラー', 'カメラの起動に失敗しました'));
 }
