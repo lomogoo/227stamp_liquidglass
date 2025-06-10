@@ -123,18 +123,9 @@ body {
   background: none;
   border: none;
   cursor: pointer;
+  position: relative; /* ::beforeのために追加 */
+  z-index: 1; /* ::beforeより手前に */
 }
-.nav-link.active {
-  color: var(--color-primary);
-  transform: translateY(-2px);
-}
-.nav-link svg {
-  transition: all 0.2s ease;
-}
-.nav-link.active svg {
-  stroke: var(--color-primary);
-}
-
 
 /* 5. Sections & Content */
 .section { display: none; padding: 20px 16px; }
@@ -174,7 +165,15 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+  position: relative; /* ::beforeのために追加 */
+  z-index: 1; /* ::beforeより手前に */
+  overflow: hidden; /* はみ出した要素を隠す */
 }
+.btn span, .btn svg {
+  position: relative;
+  z-index: 2; /* テキストとSVGを最前面に */
+}
+
 .btn-primary { background-color: var(--color-primary); color: white; }
 .btn-primary:hover { background-color: var(--color-primary-dark); }
 .btn-secondary { background-color: var(--color-border); color: var(--color-text); }
@@ -182,7 +181,7 @@ body {
 .btn:disabled { background-color: #e9ecef; color: #adb5bd; cursor: not-allowed; }
 .btn-full { width: 100%; }
 
-input[type="email"] {
+input[type="email"], input[type="text"] {
   width: 100%;
   padding: 12px;
   border: 1px solid var(--color-border);
@@ -462,20 +461,20 @@ input[type="email"] {
 
 /************************************************************/
 /* */
-/* ↓↓↓ LiquidGlass風デザイン 改修コード ↓↓↓          */
+/* ↓↓↓ LiquidGlass デザイン改修コード Ver.3 ↓↓↓      */
+/* (画像からのインスピレーションを元に質感を大幅向上)  */
 /* */
 /************************************************************/
 
 /* 1. 全体の背景とカラーパレットの定義 */
 :root {
-  /* 新しいデザインコンセプトの色を定義 */
-  --color-new-bg: #F2CC8F; /* 温かみのあるベース背景色 */
-  --color-new-gradient-start: #F4F1DE; /* グラデーション開始色 */
-  --color-new-gradient-end: #E07A5F; /* グラデーション終了色 */
-  --color-new-tab-active: #81B29A; /* タブなどのアクセント色（落ち着いた緑） */
-  --color-new-text: #3D405B; /* メインテキスト色（濃いスレートブルー） */
-  --color-glass-border: rgba(255, 255, 255, 0.4); /* ガラスの境界線色 */
-  --shadow-glass: 0 8px 32px 0 rgba(42, 157, 143, 0.15); /* ガラス用の影 */
+  --color-new-bg: #F2CC8F;
+  --color-new-gradient-start: #F4F1DE;
+  --color-new-gradient-end: #E07A5F;
+  --color-new-tab-active: #81B29A;
+  --color-new-text: #3D405B;
+  --color-glass-border: rgba(255, 255, 255, 0.4);
+  --shadow-glass: 0 8px 32px 0 rgba(42, 157, 143, 0.15);
 }
 
 /* 2. アプリ全体の背景をリッチなグラデーションに */
@@ -496,18 +495,18 @@ body {
 /* 3. ヘッダーとフッターナビをすりガラス化 */
 .app-header, .footer-nav {
   background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-new-text);
 }
 
 .app-header {
-  border-bottom: 1px solid var(--color-glass-border);
+  border-bottom: 1.5px solid var(--color-glass-border);
   text-shadow: none;
 }
 
 .footer-nav {
-  border-top: 1px solid var(--color-glass-border);
+  border-top: 1.5px solid var(--color-glass-border);
 }
 
 .logo-text, #user-status .btn {
@@ -517,114 +516,125 @@ body {
   border-color: rgba(61, 64, 91, 0.3);
   background-color: rgba(255, 255, 255, 0.2);
 }
-.nav-link.active, .nav-link.active svg {
-    color: var(--color-primary);
-    stroke: var(--color-primary);
-}
 
-
-/* 4. すべてのカード要素をガラス風に（内側の光沢を追加） */
+/* 4. [強化] カード要素 - 立体感と内部の質感を向上 */
 .card {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  /* 内部にうっすらと雲のような質感を出すためのグラデーション */
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(255,255,255,0.25) 0%, transparent 40%),
+    radial-gradient(circle at 85% 65%, rgba(255,255,255,0.2) 0%, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3));
+  
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-glass-border);
-  /* 影と、内側上部に光が当たっているようなハイライトを追加 */
-  box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  overflow: hidden; /* 画像などが角丸からはみ出ないように */
+  border: 1.5px solid rgba(255, 255, 255, 0.6); /* 縁のハイライトを強調 */
+  
+  /* 影を重ねて立体感を表現 */
+  box-shadow:
+    var(--shadow-glass), /* 外側の柔らかな影 */
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.7), /* 内側上部のハイライト */
+    inset 0 -1.5px 1px rgba(255, 255, 255, 0.2); /* 内側下部のハイライト */
+  
+  overflow: hidden;
 }
 
+/* 5. [強化] フッターナビのアクティブ表現 */
+.nav-link.active svg { stroke: white; }
+.nav-link.active span { color: white; }
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70px;
+  height: 32px;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+  border-radius: 99px;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(231, 111, 81, 0.5);
+}
+.nav-link:not(.active) svg { color: var(--color-new-text); }
 
-/* 5. 上部カテゴリタブのデザインを更新 */
-.category-tab {
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(2px);
-  color: var(--color-new-text);
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+
+/* 6. [強化] ボタンのLiquidGlass表現 */
+.btn-primary {
+  color: white;
+  background-color: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+  z-index: 1;
+  opacity: 0.7;
   transition: all 0.3s ease;
 }
-
-.category-tab.active {
-  background: var(--color-new-tab-active);
-  color: white;
-  font-weight: 700;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+.btn-primary:hover::before {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
-/* 6. モーダルウィンドウもガラス化 */
-.modal-content {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.2);
-}
-
-.summary-modal-content {
-  background: transparent;
-}
-
-/*
- * 7. スタンプカードと特典ブロックのLiquidGlass適用（詳細化）
- */
-
-/* 7-1. 未獲得スタンプを「ガラスのくぼみ」のように表現 */
+/* 7. [強化] スタンプカードのLiquidGlass表現 */
 .stamp {
-  background: rgba(0, 0, 0, 0.05); /* ガラスを少し暗くしてくぼんだ感じに */
+  background: rgba(0, 0, 0, 0.08);
   border: none;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.15); /* 内側に影を落とす */
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弾むようなアニメーション */
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
-/* 未獲得スタンプの数字スタイル */
 .stamp .stamp-number {
   color: rgba(255, 255, 255, 0.4);
   font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
-
-/* 7-2. 獲得済みスタンプを「輝くオブジェクト」のように表現 */
 .stamp.active {
-  border: 2px solid rgba(255, 255, 255, 0.8); /* 明るい境界線 */
-  /* アイコン画像の後ろに、光沢のあるグラデーションを敷く */
+  border: 2px solid rgba(255, 255, 255, 0.8);
   background-image:
     linear-gradient(45deg, var(--color-accent), var(--color-secondary));
-  box-shadow: 0 0 20px -5px var(--color-accent); /* 外側に光彩を追加 */
+  box-shadow: 0 0 25px -5px var(--color-accent);
   transform: scale(1.05);
 }
-
-/* 獲得済みスタンプのアイコンをグラデーションの上に再表示 */
 .stamp.active[data-stamp-id="1"], .stamp.active[data-stamp-id="2"], .stamp.active[data-stamp-id="4"], .stamp.active[data-stamp-id="5"] {
   background-image:
     url('assets/logo.png'),
-    linear-gradient(45deg, var(--color-accent), var(--color-secondary));
+    linear-gradient(45deg, #F9D423, #FF4E50);
 }
 .stamp.active[data-stamp-id="3"], .stamp.active[data-stamp-id="6"] {
-    background-image:
-      url('assets/truck.png'),
-      linear-gradient(45deg, var(--color-accent), var(--color-secondary));
+  background-image:
+    url('assets/truck.png'),
+    linear-gradient(45deg, #F9D423, #FF4E50);
 }
 
-/* 7-3. 特典ブロックの各項目をガラスのプレート化 */
-.rewards-card-container .card-body {
-    padding: 12px; /* アイテム間の余白を調整 */
-}
+/* 8. [強化] 特典ブロックのLiquidGlass表現 */
+.rewards-card-container .card-body { padding: 12px; }
 .reward-item {
-  background: rgba(0, 0, 0, 0.05); /* スタンプのくぼみと同じ質感 */
-  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius-md);
   transition: all 0.3s ease;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
 }
-.reward-item:not(:last-child) {
-  border-bottom: none; /* 元の区切り線は不要 */
+.reward-item:not(:last-child) { border-bottom: none; }
+.reward-item.available {
+  background: rgba(129, 178, 154, 0.3);
+  border-color: rgba(255,255,255,0.4);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.3), 0 0 15px rgba(129, 178, 154, 0.4);
 }
 
-/* 交換可能な特典をハイライト */
-.reward-item.available {
-  background: rgba(129, 178, 154, 0.3); /* アクティブタブの半透明色 */
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3); /* 内側に白い枠線 */
+/* 9. [強化] モーダルウィンドウの質感向上 */
+.modal-content {
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(255,255,255,0.3) 0%, transparent 50%),
+    radial-gradient(circle at 85% 65%, rgba(255,255,255,0.25) 0%, transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.2);
 }
