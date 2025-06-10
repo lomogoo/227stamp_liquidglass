@@ -443,109 +443,28 @@ input[type="email"] {
   text-align: center;
 }
 
-
-/* style.css の末尾にこのコードを追加 */
-
 /* 12. Schedule Image */
 .schedule-image {
-  display: block; /* 画像下の余分な余白を消す */
-  max-width: 100%; /* 親要素の幅以上に大きくならないようにする */
-  height: auto;   /* 画像の縦横比を維持する */
-  margin: 0 auto; /* 中央揃えにする */
-  border-radius: var(--radius-md); /* 画像の角を少し丸める */
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--radius-md);
 }
-
-/* style.css のロゴ画像のスタイルを以下に置き換え */
 
 /* ロゴ画像のサイズ調整（より強力な指定） */
 .app-header .logo .logo-icon {
-  height: 28px; /* 画像の高さを28pxに指定 */
-  width: auto;  /* 横幅は縦横比を維持して自動調整 */
-  vertical-align: middle; /* 隣のテキストとの縦位置を微調整 */
-}
-
-/* === ここからコピー === */
-
-/**
- * デザイン改修で気に入った部分を適用するカスタムスタイル
- * 元のstyle.cssの一番下に追加してください
- */
-
-/* 1. 全体の背景色とヘッダーの背景色を更新 */
-
-/* :rootから新しい色定義を拝借（しなくても動きますが、後で調整しやすいように） */
-:root {
-  --color-new-bg: #F2CC8F;
-  --color-new-gradient-start: #F4F1DE;
-  --color-new-gradient-end: #E07A5F;
-  --color-new-tab-active: #81B29A;
-}
-
-body {
-  /* 新しい暖かい背景色 */
-  background-color: var(--color-new-bg);
-  /* 淡いグラデーションとテクスチャを追加して深みを出す */
-  background-image: linear-gradient(170deg, var(--color-new-gradient-start) 0%, var(--color-new-gradient-end) 200%), url('https://www.transparenttextures.com/patterns/subtle-zebra-3d.png');
-}
-
-#app-root {
-  /* 全体の背景が見えるように、メインコンテンツの背景を透明に */
-  background-color: transparent;
-  box-shadow: none; /* 背景が一体化するので影は不要に */
-}
-
-.app-header {
-  /* ヘッダーも透明にして、背景との一体感を出す */
-  background: transparent;
-  /* ヘッダー内のテキストやアイコンが見やすいように、少しだけ影をつける */
-  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-/* 2. 上部タブの色使いを更新 */
-.category-tab {
-  /* 半透明の背景で軽やかな印象に */
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(2px); /* すりガラス効果（お好みで） */
-  color: var(--color-text);
-  font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.5); /* 輪郭を少しだけはっきりと */
-}
-
-.category-tab.active {
-  /* 新しいテーマのセカンダリカラー（落ち着いた緑）をアクティブ色に */
-  background: var(--color-new-tab-active);
-  color: white;
-  font-weight: 700;
-}
-
-/* === ここまでコピー === */
-
-/* style.cssの末尾に追加したコード内に、以下を追記 */
-
-.app-header {
-  /* ヘッダー内のテキストやアイコンの色を、テーマに合わせた濃い色に変更 */
-  color: #3D405B;
-  text-shadow: none; /* 背景が明るくなったのでテキストシャドウは不要 */
-}
-
-/* ログアウトボタンもヘッダーの文字色に合わせる */
-#user-status .btn {
-  color: #3D405B;
-  border-color: rgba(61, 64, 91, 0.3); /* 枠線の色も調整 */
-  background-color: rgba(255, 255, 255, 0.2); /* 背景を少し調整 */
+  height: 28px;
+  width: auto;
+  vertical-align: middle;
 }
 
 
 /************************************************************/
 /* */
-/* ↓↓↓ LiquidGlass風デザイン 改修コード ↓↓↓           */
+/* ↓↓↓ LiquidGlass風デザイン 改修コード ↓↓↓          */
 /* */
 /************************************************************/
-
-/**
- * LiquidGlass風デザイン改修
- * 元のstyle.cssの一番下に追加してください
- */
 
 /* 1. 全体の背景とカラーパレットの定義 */
 :root {
@@ -561,29 +480,151 @@ body {
 
 /* 2. アプリ全体の背景をリッチなグラデーションに */
 body {
-  /* 新しい暖かい背景色をベースに */
   background-color: var(--color-new-bg);
-  /* 斜めの淡いグラデーションと、さりげないテクスチャを重ねて深みを出す */
   background-image:
     linear-gradient(170deg, var(--color-new-gradient-start) 0%, var(--color-new-gradient-end) 200%),
     url('https://www.transparenttextures.com/patterns/subtle-zebra-3d.png');
-  /* テキストのアンチエイリアシングを最適化 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #app-root {
-  /* 全体の背景が見えるように、メインコンテンツエリアの背景は透明に */
   background-color: transparent;
-  box-shadow: none; /* 背景と一体化するため、影は不要に */
+  box-shadow: none;
 }
 
 /* 3. ヘッダーとフッターナビをすりガラス化 */
 .app-header, .footer-nav {
-  /* 背景を半透明に */
   background: rgba(255, 255, 255, 0.25);
-  /* 背景の要素をぼかす「すりガラス」効果を適用 */
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px); /* Safari対応 */
-  /* テキストの色を新しいテーマに合わせて変更 */
-  color: var(--color-new-
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--color-new-text);
+}
+
+.app-header {
+  border-bottom: 1px solid var(--color-glass-border);
+  text-shadow: none;
+}
+
+.footer-nav {
+  border-top: 1px solid var(--color-glass-border);
+}
+
+.logo-text, #user-status .btn {
+  color: var(--color-new-text);
+}
+#user-status .btn {
+  border-color: rgba(61, 64, 91, 0.3);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.nav-link.active, .nav-link.active svg {
+    color: var(--color-primary);
+    stroke: var(--color-primary);
+}
+
+
+/* 4. すべてのカード要素をガラス風に（内側の光沢を追加） */
+.card {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-glass-border);
+  /* 影と、内側上部に光が当たっているようなハイライトを追加 */
+  box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  overflow: hidden; /* 画像などが角丸からはみ出ないように */
+}
+
+
+/* 5. 上部カテゴリタブのデザインを更新 */
+.category-tab {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(2px);
+  color: var(--color-new-text);
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.category-tab.active {
+  background: var(--color-new-tab-active);
+  color: white;
+  font-weight: 700;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* 6. モーダルウィンドウもガラス化 */
+.modal-content {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.2);
+}
+
+.summary-modal-content {
+  background: transparent;
+}
+
+/*
+ * 7. スタンプカードと特典ブロックのLiquidGlass適用（詳細化）
+ */
+
+/* 7-1. 未獲得スタンプを「ガラスのくぼみ」のように表現 */
+.stamp {
+  background: rgba(0, 0, 0, 0.05); /* ガラスを少し暗くしてくぼんだ感じに */
+  border: none;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.15); /* 内側に影を落とす */
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弾むようなアニメーション */
+}
+
+/* 未獲得スタンプの数字スタイル */
+.stamp .stamp-number {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 7-2. 獲得済みスタンプを「輝くオブジェクト」のように表現 */
+.stamp.active {
+  border: 2px solid rgba(255, 255, 255, 0.8); /* 明るい境界線 */
+  /* アイコン画像の後ろに、光沢のあるグラデーションを敷く */
+  background-image:
+    linear-gradient(45deg, var(--color-accent), var(--color-secondary));
+  box-shadow: 0 0 20px -5px var(--color-accent); /* 外側に光彩を追加 */
+  transform: scale(1.05);
+}
+
+/* 獲得済みスタンプのアイコンをグラデーションの上に再表示 */
+.stamp.active[data-stamp-id="1"], .stamp.active[data-stamp-id="2"], .stamp.active[data-stamp-id="4"], .stamp.active[data-stamp-id="5"] {
+  background-image:
+    url('assets/logo.png'),
+    linear-gradient(45deg, var(--color-accent), var(--color-secondary));
+}
+.stamp.active[data-stamp-id="3"], .stamp.active[data-stamp-id="6"] {
+    background-image:
+      url('assets/truck.png'),
+      linear-gradient(45deg, var(--color-accent), var(--color-secondary));
+}
+
+/* 7-3. 特典ブロックの各項目をガラスのプレート化 */
+.rewards-card-container .card-body {
+    padding: 12px; /* アイテム間の余白を調整 */
+}
+.reward-item {
+  background: rgba(0, 0, 0, 0.05); /* スタンプのくぼみと同じ質感 */
+  border: none;
+  border-radius: var(--radius-md);
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+.reward-item:not(:last-child) {
+  border-bottom: none; /* 元の区切り線は不要 */
+}
+
+/* 交換可能な特典をハイライト */
+.reward-item.available {
+  background: rgba(129, 178, 154, 0.3); /* アクティブタブの半透明色 */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3); /* 内側に白い枠線 */
+}
